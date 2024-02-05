@@ -10,13 +10,15 @@ import random
 import pyjokes
 from bardapi import BardCookies
 import threading
+import requests
+from bs4 import BeautifulSoup
+import json
 
 engine=pyttsx3.init()
 voices=engine.getProperty('voices')
-engine.setProperty('voice', id)
+engine.setProperty('voice', voices[1].id)
 recognizer=sr.Recognizer()
 engine.setProperty('rate', 180)
-id ="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0"
 
 cookie_dict={
     "__Secure-1PSID" : "fwiOW5DvLwNZHJ1RIWdpqCEgR3R8rDz2d2Le-DT3XpiiFG6G30OWzi9tuGd5TWnP5QonLA.",    
@@ -24,7 +26,103 @@ cookie_dict={
     "__Secure-1PSIDCC" : "ABTWhQHh1SdFU51tFukepelnkARQIH9UTompI_3rqIu8-RIEjxs95ZLsL0PlN4_UqHAYgh0LmN4"    
 }
 
+dataset=[
+    {
+        "tag": "greetings",
+        "ques": [
+            "hey",
+            "hello",
+            "what's up",
+            "hola"
+        ],
+        "respo": [
+            "Hi there! How can I help you?",
+            "Greetings! What do you need today?"
+        ]
+    },
+    {
+        "tag": "care",
+        "ques": [
+            "how are you",
+            "what's up"
+        ],
+        "respo": [
+            "I am doing well, thank you."
+        ]
+    },
+    {
+        "tag": "farewell",
+        "ques": [
+            "goodbye",
+            "see you later",
+            "farewell"
+        ],
+        "respo": [
+            "Goodbye! Take care.",
+            "See you later! If you need anything, I'm here.",
+            "Farewell! Have a great day!"
+        ]
+    },
+    {
+        "tag": "thanks",
+        "ques": [
+            "thank you",
+            "thanks"
+        ],
+        "respo": [
+            "You're welcome! Don't mention it.",
+            "No problem! Thanks for your kind words.",
+            "You're very welcome! Enjoy the rest of your day."
+        ]
+    },
+    {
+        "tag": "abt_questions",
+        "ques": [
+            "what are you",
+            "what can you do"
+        ],
+        "respo": [
+            "I am a Voice Assistant, Which will help you control your Computer using your own voice"
+        ]
+    },
+    {
+        "tag": "cre_questions",
+        "ques": [
+            "who made you",
+            "who created you",
+            "what is the name of your creator",
+            "what is the name of your developer"
+        ],
+        "respo": [
+            "I was developed by a ninth grader. My creator's name is Umang Thapa",
+            "I was made by an student of Mokshada school, Who is studying in grade 9, Named Umang."
+        ]
+    },
+    {
+        "tag": "name_questions",
+        "ques": [
+            "what should i call you",
+            "how should I address you",
+            "what is your name"
+        ],
+        "respo": [
+            "You can call me SAHAYOGI or simply ASSISTANT",
+            "My name is SAHAYOGI"
+        ]
+    }
+]
+
 bard = BardCookies(cookie_dict=cookie_dict)
+
+window = tk.Tk()
+window.title("S.A.H.A.Y.O.G.I")
+
+def load_dataset(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
+
+""" dataset_file = 'Finals/dataset.json'
+dataset = load_dataset(dataset_file) """
 
 def speak(audio):
     engine.say(audio)
@@ -64,13 +162,22 @@ def takeCommand():
         print("Say that again please...")
         return "None"
 
-    return query
-
 def open_website(url):
     webbrowser.open(url)
 
 def handle_command(query, window):
     query = query.lower()
+
+    for conversation in dataset:
+        tag = conversation.get("tag", "")
+        ques_list = conversation.get("ques", [])
+        respo_list = conversation.get("respo", [])
+
+        for ques in ques_list:
+            if ques.lower() in query:
+                respo = random.choice(respo_list)
+                speak(respo)
+                return
 
     if 'open youtube' in query:
         speak("Opening YouTube...")
@@ -84,28 +191,16 @@ def handle_command(query, window):
         speak("Opening Facebook...")
         open_website("https://www.facebook.com")
 
-    elif 'what\'s the time' in query:
+    elif 'what is the time' in query:
         strTime = datetime.datetime.now().strftime("%I:%M %p")
         speak(f"The time is {strTime}")
-
-    elif 'thanks' in query:
-        speak("It's my pleasure, sir!")
-
-    elif "who made you" in query:
-        speak("I was made by an student of Mokshada school, Who is studying in grade 9, Named Umang.")
-
-    elif "what is your name" in query:
-        speak("My name is Sahayogi.")
-
-    elif 'hello' in query:
-        speak("Hi there, how can I assist you?")
 
     elif 'open reddit' in query:
         speak("Opening Reddit...")
         open_website("https://www.reddit.com")
 
     elif 'open instagram' in query:
-        speak("Opening Insta gram...")
+        speak("Opening Instagram...")
         open_website("https://www.instagram.com/")
 
     elif 'open github' in query:
@@ -179,39 +274,6 @@ def handle_command(query, window):
         speak(joke)
         print(joke)
 
-    elif 'play some english songs' in query:
-        en_songs  = [ 'MAIN\\English songs\\Counting Stars.mp3' ,'MAIN\\English songs\\Gone gone gone.mp3','MAIN\\English songs\\Toxic.mp3']
-        en_random_songs = random.choice(en_songs)
-        if en_random_songs == 'MAIN\\English songs\\Counting Stars.mp3':
-            speak('Playing Counting Stars!')
-        if en_random_songs == 'MAIN\\English songs\\Gone gone gone.mp3':
-            speak('Playing Gone Gone Gone!')
-        if en_random_songs == 'MAIN\\English songs\\Toxic.mp3':
-            speak('Playing Toxic!')
-        os.startfile(en_random_songs)
-    
-    elif 'play some nepali songs' in query:
-        np_songs = ['MAIN\\Nepali songs\\Buddha Was Born In Nepal  .mp3','MAIN\\Nepali songs\\Gauchha Geet Nepali.mp3','MAIN\\Nepali songs\\Karke Nazar.mp3','MAIN\\Nepali songs\\Man Magan.mp3','MAIN\\Nepali songs\\Oye Timro chha ki cchaina koi.mp3','MAIN\\Nepali songs\\Pashina ko jaalale.mp3','MAIN\\Nepali songs\\Rato ra Chandra surjye.mp3','MAIN\\Nepali songs\\Yo nepali shir Uchali.mp3']
-        np_random_songs = random.choice(np_songs)
-        if np_random_songs == 'MAIN\\Nepali songs\\Buddha Was Born In Nepal  .mp3':
-            speak('Playing Buddha was born in Nepal')
-        if np_random_songs == 'MAIN\\Nepali songs\\Gauchha Geet Nepali.mp3':
-            speak('Playing Gauchha Geet Nepali')
-        if np_random_songs == 'MAIN\\Nepali songs\\karke Nazar.mp3':
-            speak('Playing Karke Nazar')
-        if np_random_songs == 'MAIN\\Nepali songs\\Man Magan.mp3':
-            speak('Playing Man Magan')
-        if np_random_songs == 'MAIN\\Nepali song\\/Oye Timro chha ki cchaina koi.mp3':
-            speak('Playing Oye Timro Chha Ki Chhaina Koi')
-        if np_random_songs == 'MAIN\\Nepali songs\\Pashina ko jaalale.mp3':
-            speak('Playing Pashina Ko Jaalale')
-        if np_random_songs == 'MAIN\\Nepali songs\\Rato ra Chandra surjye.mp3':
-            speak('Playing Rato Ra Chandra Surjye')
-        if np_random_songs == 'MAIN\\Nepali songs\\Yo nepali shir Uchali.mp3':
-            speak('Playing Yo Nepali Shir Uchali')
-
-        os.startfile(np_random_songs)
-
     elif 'open a website' in query:
         speak('Sure! Please say the full URL of the website you want to open.')
         url_query = takeCommand()
@@ -231,8 +293,25 @@ def handle_command(query, window):
         speak('Opening the portfolio of my creator!')
         webbrowser.open('https://umangthapa.netlify.app')
 
-    elif 'what are you' in query:
-        speak('I am a Voice Assistant, Which will help you control your Computer using your own voice')
+    elif 'play a song' in query:
+        speak("Which song would you like to play?")
+        song = takeCommand()
+        pywhatkit.playonyt(song)
+        speak("Playing " + song + "on youtube")
+
+    elif 'temperature'  in query:
+        search = 'temperature in kathmandu'
+        url = f"https://www.google.com/search?q={search}"
+        r = requests.get(url)
+        data = BeautifulSoup(r.text, "html.parser")
+        temperature = data.find("div", class_="BNeawe").text
+        speak(f"The current temperature is {temperature}")
+
+    elif 'show me something in youtube' in query:
+        speak('What do you want to see in YouTube?')
+        video_query = takeCommand()
+        pywhatkit.playonyt(video_query)
+        speak('Playing' + video_query + "in youtube")
 
     else:
         speak("I'm sorry, I didn't understand that command. Can you please repeat?")
@@ -240,7 +319,7 @@ def handle_command(query, window):
 
 def process_command():
     query = takeCommand()
-    handle_command(query)
+    handle_command(query, window)
 
 def clean_up_text(text):
     cleaned_text = text.replace('*', '.').replace('@', 'at').replace(':','.').replace('.','. ')
@@ -249,14 +328,32 @@ def clean_up_text(text):
 def clean_up_url(text):
     cleaned_url = text.replace('dot', '.').replace('slash', '/')
     return cleaned_url
- 
+
+wake_up_phrase = ("hey assistant", "wake up assitant")
+
+def listen_for_wake_up():
+    while True:
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            print("Listening for Wake Up Command...")
+            audio = recognizer.listen(source, 0, 5)
+
+        try:
+            text = recognizer.recognize_google(audio, language='en_US').lower()
+            if any(phrase in text for phrase in wake_up_phrase):
+                print("Wake Up Command Detected!")
+                speak("Yes, how can I assist you?")
+                process_command()
+        except sr.UnknownValueError:
+            pass
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Speech Recognition service; {e}")
+
 def create_gui():
-    window = tk.Tk()
-    window.title("Sahayogi")
 
     window.geometry("400x300+300+150")
 
-    label = tk.Label(window, text="Sahayogi", font=("Monaco", 24))
+    label = tk.Label(window, text="S.A.H.A.Y.O.G.I", font=("Monaco", 24))
     label.pack(pady=20)
 
     text_box = tk.Text(window, height=8, width=40)
@@ -275,11 +372,10 @@ def create_gui():
          threading.Thread(target=process_command_with_display).start()
 
     window.bind("<space>", start_listening)
+    threading.Thread(target=listen_for_wake_up).start()
 
     window.mainloop()
 
-
 if __name__ == "__main__":
-
     wishMe()
     create_gui()
