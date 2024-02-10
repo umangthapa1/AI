@@ -3,28 +3,29 @@ import pyttsx3
 import speech_recognition as sr
 import datetime
 import webbrowser
-import tkinter as tk
+from customtkinter import * 
 import os
 import pywhatkit
 import random 
 import pyjokes
-from bardapi import BardCookies
 import threading
 import requests
 from bs4 import BeautifulSoup
 import json
+import google.generativeai as genai
+import google.ai.generativelanguage as glm
+import pyautogui
+import time
 
-engine=pyttsx3.init()
+engine=pyttsx3.init('sapi5')
 voices=engine.getProperty('voices')
-engine.setProperty('voice', voices[1].id)
+engine.setProperty('voice', voices[2].id)
 recognizer=sr.Recognizer()
 engine.setProperty('rate', 180)
 
-cookie_dict={
-    "__Secure-1PSID" : "fwiOW5DvLwNZHJ1RIWdpqCEgR3R8rDz2d2Le-DT3XpiiFG6G30OWzi9tuGd5TWnP5QonLA.",    
-    "__Secure-1PSIDTS" : "sidts-CjIBPVxjSnU97U2zSnNp1S48jsXVy2VNQ4IwO4MwhGpcBnYD64XZkCX1KFy_LnH4cR8B-xAA",    
-    "__Secure-1PSIDCC" : "ABTWhQHh1SdFU51tFukepelnkARQIH9UTompI_3rqIu8-RIEjxs95ZLsL0PlN4_UqHAYgh0LmN4"    
-}
+genai.configure(api_key='YOUR_API_KEY_HERE')
+model = genai.GenerativeModel('gemini-pro')
+chat = model.start_chat()
 
 dataset=[
     {
@@ -112,17 +113,12 @@ dataset=[
     }
 ]
 
-bard = BardCookies(cookie_dict=cookie_dict)
-
-window = tk.Tk()
+window = CTk()
 window.title("S.A.H.A.Y.O.G.I")
 
 def load_dataset(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
-
-""" dataset_file = 'Finals/dataset.json'
-dataset = load_dataset(dataset_file) """
 
 def speak(audio):
     engine.say(audio)
@@ -130,13 +126,14 @@ def speak(audio):
 
 def wishMe():
     hour = datetime.datetime.now().hour
+    strTime = datetime.datetime.now().strftime("%I:%M %p")
     if hour >= 0 and hour < 12:
         speak("Good Morning!")
     elif hour >= 12 and hour < 18:
         speak("Good Afternoon!")
     else:
         speak("Good Evening!")
-
+    speak(f"The time is {strTime}")
     speak("I am your personal Sahayogi. How may I assist you?")
 
 def takeCommand():
@@ -153,7 +150,7 @@ def takeCommand():
         speak("Recognizing...") 
         query = r.recognize_google(recordedaudio)
         print(f"User Said: {query}\n")
-        if 'bye' in query.lower():
+        if 'bye' in query.lower() or 'goodbye' in query.lower() or 'see you later' in query.lower() or 'farewell' in query.lower():
             speak("Goodbye! See you soon!")
             window.destroy()  
             sys.exit()
@@ -281,13 +278,26 @@ def handle_command(query, window):
         speak(f'opening website {cleaned_url}')
         webbrowser.open(cleaned_url)
 
-    elif 'let me ask you something' in query:
-        speak('Sure! ask me anything')
+    if any(word in query for word in ['who', 'what', 'where', 'when', 'why', 'how', 'tell me about']):
+        if 'temperature' in query:
+                    search = 'temperature in kathmandu'
+                    url = f"https://www.google.com/search?q={search}"
+                    r = requests.get(url)
+                    data = BeautifulSoup(r.text, "html.parser")
+                    temperature = data.find("div", class_="BNeawe").text
+                    speak(f"The current temperature is {temperature}")
+        else:
+            speak('Searching...')
+            response = chat.send_message(query)
+            cleaned_reply = clean_up_text(response.text)
+            print(cleaned_reply)
+            speak(cleaned_reply)
+
+    elif 'search about a topic'  in query or 'search about the topic' in query:
+        speak('what do you want to search about?')
         topic = takeCommand()
-        speak('Searching...')
-        Reply = bard.get_answer(topic)['content']
-        cleaned_reply = clean_up_text(Reply)
-        speak(cleaned_reply)
+        speak('searching...')
+        webbrowser.open(topic)
 
     elif 'open the portfolio of your creator' in query:
         speak('Opening the portfolio of my creator!')
@@ -299,19 +309,41 @@ def handle_command(query, window):
         pywhatkit.playonyt(song)
         speak("Playing " + song + "on youtube")
 
-    elif 'temperature'  in query:
-        search = 'temperature in kathmandu'
-        url = f"https://www.google.com/search?q={search}"
-        r = requests.get(url)
-        data = BeautifulSoup(r.text, "html.parser")
-        temperature = data.find("div", class_="BNeawe").text
-        speak(f"The current temperature is {temperature}")
-
     elif 'show me something in youtube' in query:
         speak('What do you want to see in YouTube?')
         video_query = takeCommand()
         pywhatkit.playonyt(video_query)
         speak('Playing' + video_query + "in youtube")
+
+    elif 'volume up' in query:
+        pyautogui.press("volumeup")
+        time.sleep(0.50)
+        pyautogui.press("volumeup")
+        time.sleep(0.50)
+        pyautogui.press("volumeup")
+        time.sleep(0.50)
+        pyautogui.press("volumeup")
+        time.sleep(0.50)
+        pyautogui.press("volumeup")
+        time.sleep(0.50)
+
+    elif 'volume down' in query:
+        pyautogui.press("volumedown")
+        time.sleep(0.50)
+        pyautogui.press("volumedown")
+        time.sleep(0.50)
+        pyautogui.press("volumedown")
+        time.sleep(0.50)
+        pyautogui.press("volumedown")
+        time.sleep(0.50)
+        pyautogui.press("volumedown")
+        time.sleep(0.50)
+
+    elif 'volume mute' in query:
+        pyautogui.press("volumemute")
+
+    elif 'volume unmute' in query:
+        pyautogui.press("volumeunmute")
 
     else:
         speak("I'm sorry, I didn't understand that command. Can you please repeat?")
@@ -321,23 +353,22 @@ def process_command():
     query = takeCommand()
     handle_command(query, window)
 
-def clean_up_text(text):
-    cleaned_text = text.replace('*', '.').replace('@', 'at').replace(':','.').replace('.','. ')
+def clean_up_text(texts):
+    cleaned_text = texts.replace('*', '.').replace('@', 'at').replace(':','.').replace('.','. ')
     return cleaned_text
 
-def clean_up_url(text):
-    cleaned_url = text.replace('dot', '.').replace('slash', '/')
+def clean_up_url(texts):
+    cleaned_url = texts.replace('dot', '.').replace('slash', '/')
     return cleaned_url
 
-wake_up_phrase = ("hey assistant", "wake up assitant")
+wake_up_phrase = ("hey assistant", "wake up assistant")
 
 def listen_for_wake_up():
     while True:
         with sr.Microphone() as source:
             recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            print("Listening for Wake Up Command...")
-            audio = recognizer.listen(source, 0, 5)
-
+            print("...")
+            audio = recognizer.listen(source)
         try:
             text = recognizer.recognize_google(audio, language='en_US').lower()
             if any(phrase in text for phrase in wake_up_phrase):
@@ -346,22 +377,21 @@ def listen_for_wake_up():
                 process_command()
         except sr.UnknownValueError:
             pass
-        except sr.RequestError as e:
+        except sr.RequestError as e: 
             print(f"Could not request results from Google Speech Recognition service; {e}")
 
 def create_gui():
-
     window.geometry("400x300+300+150")
 
-    label = tk.Label(window, text="S.A.H.A.Y.O.G.I", font=("Monaco", 24))
+    label = CTkLabel(window, text="S.A.H.A.Y.O.G.I", font=("Monaco", 24))
     label.pack(pady=20)
 
-    text_box = tk.Text(window, height=8, width=40)
+    text_box = CTkTextbox(window, height=200, width=290, corner_radius=16, border_color='#FFFFFF', border_width=1)
     text_box.pack(pady=10)
 
     def display_text(text):
-        text_box.delete("1.0", tk.END)
-        text_box.insert(tk.END, text)
+        text_box.delete("1.0", 'end')
+        text_box.insert('end', text)
 
     def process_command_with_display():
         query = takeCommand()
