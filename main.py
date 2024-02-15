@@ -116,7 +116,7 @@ engine.setProperty('voice', voices[2].id)
 recognizer=sr.Recognizer()
 engine.setProperty('rate', 180)
 
-genai.configure(api_key='AIzaSyCx4XlSXC26HjkPp4pZIcfNetxCDe72PjE')
+genai.configure(api_key='YOUR_API_KEY')
 model = genai.GenerativeModel('gemini-pro')
 chat = model.start_chat()
 
