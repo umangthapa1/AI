@@ -1,0 +1,7 @@
+import speech_recognition as sr
+
+r = sr.Recognizer()
+with sr.Microphone() as source:
+    print("Adjusting for background noise... Please be silent for a moment.")
+    r.adjust_for_ambient_noise(source, duration=2)
+    print(f"Current energy threshold: {r.energy_threshold}")

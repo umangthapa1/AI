@@ -16,8 +16,12 @@ import google.ai.generativelanguage as glm
 import pyautogui
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
+from googletrans import Translator
+from PyQt5.QtWidgets import QSystemTrayIcon, QMainWindow
 
-class Ui_Dialog(object):
+tray_icon= None
+
+class Ui_Dialog(QtWidgets.QMainWindow):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(1146, 641)
@@ -31,19 +35,43 @@ class Ui_Dialog(object):
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(20, 140, 361, 311))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("../../../Downloads/R.gif"))
+        self.label.setPixmap(QtGui.QPixmap("assets/stand.gif"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
+        self.label_listening = QtWidgets.QLabel(Dialog)
+        self.label_listening.setGeometry(QtCore.QRect(20, 140, 361, 311))
+        self.label_listening.setText("")
+        self.label_listening.setPixmap(QtGui.QPixmap("assets/listening.gif"))
+        self.label_listening.setScaledContents(True)
+        self.label_listening.setObjectName("label_listening")
+        self.label_speaking = QtWidgets.QLabel(Dialog)
+        self.label_speaking.setGeometry(QtCore.QRect(20, 140, 361, 311))
+        self.label_speaking.setText("")
+        self.label_speaking.setPixmap(QtGui.QPixmap("assets/speaking.gif"))
+        self.label_speaking.setScaledContents(True)
+        self.label_speaking.setObjectName("label_speaking")
+        self.label_recognizing = QtWidgets.QLabel(Dialog)
+        self.label_recognizing.setGeometry(QtCore.QRect(20, 140, 361, 311))
+        self.label_recognizing.setText("")
+        self.label_recognizing.setPixmap(QtGui.QPixmap("assets/recognizing.gif"))
+        self.label_recognizing.setScaledContents(True)
+        self.label_recognizing.setObjectName("label_recognizing")
+        self.label_searching = QtWidgets.QLabel(Dialog)
+        self.label_searching.setGeometry(QtCore.QRect(20, 140, 361, 311))
+        self.label_searching.setText("")
+        self.label_searching.setPixmap(QtGui.QPixmap("assets/asearching.gif"))
+        self.label_searching.setScaledContents(True)
+        self.label_searching.setObjectName("label_searching")
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(680, 360, 461, 271))
         self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap("../../../Downloads/cyberpunk-retro-futuristic-hud-animation-for-live-streaming-display-overlay-and-copy-space-in-neon-light-color-free-video.jpg"))
+        self.label_2.setPixmap(QtGui.QPixmap("assets/terminal.jpg"))
         self.label_2.setScaledContents(True)
         self.label_2.setObjectName("label_2")
         self.label_3 = QtWidgets.QLabel(Dialog)
         self.label_3.setGeometry(QtCore.QRect(340, 10, 551, 91))
         self.label_3.setText("")
-        self.label_3.setPixmap(QtGui.QPixmap("../../../Downloads/text-1706882966116 (1).png"))
+        self.label_3.setPixmap(QtGui.QPixmap("assets/Text.png"))
         self.label_3.setScaledContents(True)
         self.label_3.setObjectName("label_3")
         self.label_4 = QtWidgets.QLabel(Dialog)
@@ -68,7 +96,7 @@ class Ui_Dialog(object):
         self.label_6 = QtWidgets.QLabel(Dialog)
         self.label_6.setGeometry(QtCore.QRect(10, 560, 71, 61))
         self.label_6.setText("")
-        self.label_6.setPixmap(QtGui.QPixmap("../../../Downloads/R (1).png"))
+        self.label_6.setPixmap(QtGui.QPixmap("assets/arc.gif"))
         self.label_6.setScaledContents(True)
         self.label_6.setObjectName("label_6")
         self.label_7 = QtWidgets.QLabel(Dialog)
@@ -97,7 +125,7 @@ class Ui_Dialog(object):
         self.label_9.setObjectName("label_9")
         self.terminalOutputBox = QtWidgets.QPlainTextEdit(Dialog)
         self.terminalOutputBox.setGeometry(QtCore.QRect(730, 440, 361, 101))
-        self.terminalOutputBox.setStyleSheet("color: rgb(19, 192, 235)")
+        self.terminalOutputBox.setStyleSheet("color: rgb(19, 192, 235); border: None;")
         self.terminalOutputBox.setObjectName("terminalOutputBox")
         self.terminalOutputBox.setReadOnly(True)
 
@@ -106,17 +134,54 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "S.A.H.A.Y.G.U"))
+        Dialog.setWindowTitle(_translate("Dialog", "S.A.H.A.Y.O.G.I"))
         self.label_5.setText(_translate("Dialog", "dsc.gg/coders-hub"))
         self.label_7.setText(_translate("Dialog", "github.com/umangthapa1"))
 
+    def updateui(self, state):
+        if state == "listening":
+            self.label_listening.raise_()
+            self.label.hide()
+            self.label_recognizing.hide()
+            self.label_speaking.hide()
+            self.label_searching.hide()
+            self.label_listening.show()
+        elif state == "speaking":
+            self.label_speaking.raise_()
+            self.label.hide()
+            self.label_recognizing.hide()
+            self.label_listening.hide()
+            self.label_searching.hide()
+            self.label_speaking.show()
+        elif state == "recognizing":
+            self.label_recognizing.raise_()
+            self.label.hide()
+            self.label_listening.hide()
+            self.label_searching.hide()
+            self.label_speaking.hide()
+            self.label_recognizing.show()
+        elif state == "neutral":
+            self.label.raise_()
+            self.label_recognizing.hide()
+            self.label_listening.hide()
+            self.label_speaking.hide()
+            self.label_searching.hide()
+            self.label.show()
+        elif state == "searching":
+            self.label_searching.raise_()
+            self.label_recognizing.hide()
+            self.label_listening.hide()
+            self.label_speaking.hide()
+            self.label.hide()
+            self.label_searching.show()
+
 engine=pyttsx3.init('sapi5')
 voices=engine.getProperty('voices')
-engine.setProperty('voice', voices[2].id)
+engine.setProperty('voice', voices[1].id)
 recognizer=sr.Recognizer()
 engine.setProperty('rate', 180)
 
-genai.configure(api_key='AIzaSyCx4XlSXC26HjkPp4pZIcfNetxCDe72PjE')
+genai.configure(api_key='AIzaSyDLGFSXvGSMAZK5ETYwZTwN7hNIc5zXb2c')
 model = genai.GenerativeModel('gemini-pro')
 chat = model.start_chat()
 
@@ -206,11 +271,30 @@ dataset=[
     }
 ]
 
+recognizer.dynamic_energy_threshold = False
+recognizer.energy_threshold = 350  # Adjust based on testing
+
 def load_dataset(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
 def speak(audio):
+    ui.updateui("speaking")
+    engine.say(audio)
+    engine.runAndWait()
+    ui.updateui("neutral")
+
+def speak2(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+def speak_wc(audio):
+    ui.updateui("neutral")
+    engine.say(audio)
+    engine.runAndWait()
+
+def speak_s(audio):
+    ui.updateui("searching")
     engine.say(audio)
     engine.runAndWait()
 
@@ -218,35 +302,40 @@ def wishMe():
     hour = datetime.datetime.now().hour
     strTime = datetime.datetime.now().strftime("%I:%M %p")
     if hour >= 0 and hour < 12:
-        speak("Good Morning!")
+        speak_wc("Good Morning!")
+        speak_wc(f"The time is {strTime}")
     elif hour >= 12 and hour < 18:
-        speak("Good Afternoon!")
+        speak_wc("Good Afternoon!")
+        speak_wc(f"The time is {strTime}")
     else:
-        speak("Good Evening!")
-    speak(f"The time is {strTime}")
-    speak("I am your personal Sahayogi. How may I assist you?")
+        speak_wc("Good Evening!")
+        speak_wc(f"The time is {strTime}")
+    speak_wc("I am your personal Sahayogi. How may I assist you?")
 
 def takeCommand():
     r = sr.Recognizer()
+    ui.updateui("listening")
     with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source, duration=0.2)
         print("Listening...")
-        speak("Listening...")
-        recordedaudio = recognizer.listen(source,0,8)
+        speak2("Listening...")
+        recognizer.adjust_for_ambient_noise(source, duration=0.2)
+        recordedaudio = recognizer.listen(source, timeout=5, phrase_time_limit=12)
     try:
-        text = recognizer.recognize_google(recordedaudio, language='en_US')
         print("Recognizing...")
-        speak("Recognizing...") 
+        ui.updateui("recognizing")
+        speak2("Recognizing...")
         query = r.recognize_google(recordedaudio)
         print(f"User Said: {query}\n")
         if 'bye' in query.lower() or 'goodbye' in query.lower() or 'see you later' in query.lower() or 'farewell' in query.lower():
             speak("Goodbye! See you soon!")
-            window.destroy()  
+            window.destroy()   # type: ignore
             sys.exit()
         return query
     except Exception as e:
         print("Say that again please...")
         return "None"
+
+
 
 def open_website(url):
     webbrowser.open(url)
@@ -266,22 +355,60 @@ def handle_command(query, outputterminalBox):
                 speak(respo)
                 return
 
-    if any(word in query for word in ['who', 'what', 'where', 'when', 'why', 'how', 'tell me about']):
+    if any(word in query for word in ['who', 'what', 'where', 'when', 'why', 'how', 'tell me about', 'can you give me the code']):
         if 'temperature' in query:
-            pass
+            search = 'temperature in kathmandu'
+            url = f"https://www.google.com/search?q={search}"
+            r = requests.get(url)
+            data = BeautifulSoup(r.text, "html.parser")
+            temperature = data.find("div", class_="BNeawe").text
+            outputterminalBox.appendPlainText(f"The current temperature is {temperature}") 
+            speak(f"The current temperature is {temperature}")
         elif ques.lower() in query:
             pass
         elif 'what is the time' in query:
             strTime = datetime.datetime.now().strftime("%I:%M %p")
             outputterminalBox.appendPlainText(f"The time is {strTime}")
             speak(f"The time is {strTime}")
+        elif 'code' in query:
+            if 'html' in query:
+                with open("code.html", "w", encoding="utf-8") as file:
+                    code_response = chat.send_message(query)
+                    cleaned_code_reply = clean_up_code(code_response.text)
+                    outputterminalBox.appendPlainText("The code is written in Code.HTML") 
+                    speak("The code is written in Code.HTML")
+                    file.write(cleaned_code_reply)
+                    os.startfile("code.html")
 
+            if 'python' in query:
+                with open("code.py", "w", encoding="utf-8") as file:
+                    code_response = chat.send_message(query)
+                    cleaned_code_reply = clean_up_code(code_response.text)
+                    outputterminalBox.appendPlainText("The code is written in Code.py") 
+                    speak("The code is written in Code.py")
+                    file.write(cleaned_code_reply)
+                    os.startfile("code.py")
+        elif 'tell me about your school' in query:
+            outputterminalBox.appendPlainText('MOKSHADA SCHOOL welcomes all our dear students, parents, and well-wishers in the holy area of Pashupatinath. It is situated at Mokshada Nagar, Kumarigal, Kathmandu. Since 1997, the school has carried the legacy of progressive teaching-learning. Besides, the pedagogical approach has been transformed now and then with the need of time and learning scenarios. Moreover, the qualified teachers, learning culture, tech-friendly platform, and multi-dimensional trends of academics are the enhancing factors of the school. Acknowledging quality education to the learners has centred the major objective of the school. Henceforth, the motto of the school is “Read, Lead and Succeed”. Learners will merely get the feel of learning home here.')
+            speak('MOKSHADA SCHOOL welcomes all our dear students, parents, and well-wishers in the holy area of Pashupatinath. It is situated at Mokshada Nagar, Kumarigal, Kathmandu. Since 1997, the school has carried the legacy of progressive teaching-learning. Besides, the pedagogical approach has been transformed now and then with the need of time and learning scenarios. Moreover, the qualified teachers, learning culture, tech-friendly platform, and multi-dimensional trends of academics are the enhancing factors of the school. Acknowledging quality education to the learners has centred the major objective of the school. Henceforth, the motto of the school is “Read, Lead and Succeed”. Learners will merely get the feel of learning home here.')
+            speak('Thank you!')
         else:
-            speak('Searching...')
-            response = chat.send_message(query)
+            speak_s('Searching...')
+            response = chat.send_message(query + "In Very short (if the topic is confusing then a lilttle long)")
             cleaned_reply = clean_up_text(response.text)
             outputterminalBox.appendPlainText(cleaned_reply) 
             speak(cleaned_reply)
+
+        speak("Would you like to save this response? Please say yes or no.")
+        save_option = takeCommand().lower()
+
+        if "yes" in save_option:
+            with open("google_ai_responses.txt", "a", encoding="utf-8") as file:
+                file.write(f"Query: {query}\nResponse: {cleaned_reply}\n{'-'*50}\n")
+            speak("Response saved successfully.")
+            print("Response saved to google_ai_responses.txt")
+        else:
+            speak("Okay, not saving the response.")
 
     elif 'open youtube' in query:
         outputterminalBox.appendPlainText("Opening Youtube...")
@@ -304,9 +431,10 @@ def handle_command(query, outputterminalBox):
         speak(f"The time is {strTime}")
 
     elif 'open reddit' in query:
-        speaoutputterminalBox.appendPlainText("Opening Reddit...")
+        outputterminalBox.appendPlainText("Opening Reddit...")
         speak("Opening Reddit...")
         open_website("https://www.reddit.com")
+        speak(("Opening Reddit..."))
 
     elif 'open instagram' in query:
         outputterminalBox.appendPlainText("Opening Instagram...")
@@ -397,11 +525,6 @@ def handle_command(query, outputterminalBox):
         speak("Emptying the Recycle Bin...")
         os.system("cmd /c echo Y|PowerShell.exe -NoProfile -Command Clear-RecycleBin")
 
-    elif 'tell me about your school' in query:
-        outputterminalBox.appendPlainText('MOKSHADA SCHOOL welcomes all our dear students, parents, and well-wishers in the holy area of Pashupatinath. It is situated at Mokshada Nagar, Kumarigal, Kathmandu. Since 1997, the school has carried the legacy of progressive teaching-learning. Besides, the pedagogical approach has been transformed now and then with the need of time and learning scenarios. Moreover, the qualified teachers, learning culture, tech-friendly platform, and multi-dimensional trends of academics are the enhancing factors of the school. Acknowledging quality education to the learners has centred the major objective of the school. Henceforth, the motto of the school is “Read, Lead and Succeed”. Learners will merely get the feel of learning home here.')
-        speak('MOKSHADA SCHOOL welcomes all our dear students, parents, and well-wishers in the holy area of Pashupatinath. It is situated at Mokshada Nagar, Kumarigal, Kathmandu. Since 1997, the school has carried the legacy of progressive teaching-learning. Besides, the pedagogical approach has been transformed now and then with the need of time and learning scenarios. Moreover, the qualified teachers, learning culture, tech-friendly platform, and multi-dimensional trends of academics are the enhancing factors of the school. Acknowledging quality education to the learners has centred the major objective of the school. Henceforth, the motto of the school is “Read, Lead and Succeed”. Learners will merely get the feel of learning home here.')
-        speak('Thank you!')
-
     elif 'tell me a joke' in query:
         joke=pyjokes.get_joke()
         outputterminalBox.appendPlainText(joke)
@@ -415,15 +538,6 @@ def handle_command(query, outputterminalBox):
         outputterminalBox.appendPlainText(f'opening website {cleaned_url}')
         speak(f'opening website {cleaned_url}')
         webbrowser.open(cleaned_url)
-
-    elif 'temperature' in query:
-        search = 'temperature in kathmandu'
-        url = f"https://www.google.com/search?q={search}"
-        r = requests.get(url)
-        data = BeautifulSoup(r.text, "html.parser")
-        temperature = data.find("div", class_="BNeawe").text
-        outputterminalBox.appendPlainText(f"The current temperature is {temperature}") 
-        speak(f"The current temperature is {temperature}")
 
     elif 'search about a topic'  in query or 'search about the topic' in query:
         outputterminalBox.appendPlainText('what do you want to search about?')
@@ -442,9 +556,12 @@ def handle_command(query, outputterminalBox):
         outputterminalBox.appendPlainText("Which song would you like to play?")
         speak("Which song would you like to play?")
         song = takeCommand()
-        pywhatkit.playonyt(song)
-        speak("Playing " + song + "on youtube")
-        outputterminalBox.appendPlainText("Playing " + song + "on youtube")
+        if song!="none":
+            pywhatkit.playonyt(song)
+            speak("Playing " + song + "on youtube")
+            outputterminalBox.appendPlainText("Playing " + song + "on youtube")
+        else:
+            outputterminalBox.appendPlainText("I'm sorry, I didn't find that song.")
 
     elif 'show me something in youtube' in query:
         outputterminalBox.appendPlainText('What do you want to see in YouTube?')
@@ -480,12 +597,46 @@ def handle_command(query, outputterminalBox):
 
     elif 'volume mute' in query:
         pyautogui.press("volumemute")
-        pyautogui.press("volumeunmute")
+
+    elif 'message my server manager' in query:
+        if 'saying' in query:
+            msg = clean_up_msg(query)
+            speak('Ok Sure!')
+            open_website('https://discord.com/channels/@me/872034204639186975')
+            time.sleep(25)
+            pyautogui.write(msg)
+            pyautogui.press('enter')
+            time.sleep(2)
+            speak('Done! Sent:' + msg)
+            outputterminalBox.appendPlainText("Done! Sent: " + msg)
+        else:
+            speak('Sure! What do u want me to send!')
+            msg = takeCommand()
+            speak('Ok Sure!')
+            open_website('https://discord.com/channels/@me/872034204639186975')
+            time.sleep(25)
+            pyautogui.write(msg)
+            time.sleep(1)
+            pyautogui.press('enter')
+            time.sleep(1)
+            speak('Done! Sent:' + msg)
+            outputterminalBox.appendPlainText("Done! Sent: " + msg)
 
     else:
         outputterminalBox.appendPlainText("I'm sorry, I didn't understand that command. Can you please repeat?")
         speak("I'm sorry, I didn't understand that command. Can you please repeat?")
         return takeCommand()
+
+def minimize_to_tray():
+    global tray_icon
+    tray_icon = QSystemTrayIcon(QtGui.QIcon("../../../Downloads/logo.png"), parent=app)
+    tray_icon.show()
+    Dialog.hide()
+
+def restore_from_tray():
+    global tray_icon
+    tray_icon.hide()
+    Dialog.show()
 
 def process_command():
     query = takeCommand()
@@ -495,33 +646,54 @@ def clean_up_text(texts):
     cleaned_text = texts.replace('*', '.').replace('@', 'at').replace(':','.').replace('.','. ')
     return cleaned_text
 
+def clean_up_msg(texts):
+    cleaned_msg = texts.replace('message my server manager saying', ' ')
+    return cleaned_msg
+
+def clean_up_code(texts):
+    cleaned_text = texts.replace('```', ' ').replace('html', ' ').replace('python', ' ')
+    return cleaned_text
+
 def clean_up_url(texts):
     cleaned_url = texts.replace('dot', '.').replace('slash', '/')
     return cleaned_url
 
+class ListenThread(QtCore.QThread):
+    def __init__(self):
+        super().__init__()
 
-def listen_for_wake_up():
-    wake_up_phrase = ("hey assistant", "wake up assistant")
-    while True:
-        with sr.Microphone() as source:
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            print("...")
-            audio = recognizer.listen(source)
-        try:
-            text = recognizer.recognize_google(audio, language='en_US').lower()
-            if any(phrase in text for phrase in wake_up_phrase):
-                print("Wake Up Command Detected!")
-                speak("Yes, how can I assist you?")
-                process_command()
-        except sr.UnknownValueError:
-            pass
-        except sr.RequestError as e: 
-            print(f"Could not request results from Google Speech Recognition service; {e}")
-            outputterminalBox.appendPlainText(f"Could not request results from Google Speech Recognition service; {e}")
+    def run(self):
+        ui.updateui("neutral")
+        wake_up_phrase = ("hey assistant", "wake up assistant")
+        while True:
+            with sr.Microphone() as source:
+                recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                print("...")
+                audio = recognizer.listen(source)
+            try:
+                text = recognizer.recognize_google(audio, language='en_US').lower()
+                if any(phrase in text for phrase in wake_up_phrase):
+                    if "take some rest" in text:
+                        speak("Ok! Sir")
+                        minimize_to_tray()
+                        while True:
+                            if "wake up assitant" in text:
+                                restore_from_tray()
+                    else:
+                        print("Wake Up Command Detected!")
+                        speak("Yes, how can I assist you?")
+                        process_command()
+            except sr.UnknownValueError:
+                pass
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                outputterminalBox.appendPlainText(f"Could not request results from Google Speech Recognition service; {e}") # type: ignore
 
 def on_finished():
-    global stop_flag
-    stop_flag = True
+    global tray_icon
+    if tray_icon is not None:
+        tray_icon.hide()
+        del tray_icon
     sys.exit()
 
 if __name__ == "__main__":
@@ -535,18 +707,36 @@ if __name__ == "__main__":
     ui.label_8.setMovie(ui.movie)
     ui.movie.start()
 
-    ui.movie2= QtGui.QMovie("R (1).gif")
+    ui.movie2= QtGui.QMovie("assets/arc.gif")
     ui.label_9.setMovie(ui.movie2)
     ui.movie2.start()
 
-    ui.movie3= QtGui.QMovie("R.gif")
+    ui.movie3= QtGui.QMovie("assets/stand.gif")
     ui.label.setMovie(ui.movie3)
     ui.movie3.start()
 
+    ui.movie4= QtGui.QMovie("assets/listening.gif")
+    ui.label_listening.setMovie(ui.movie4)
+    ui.movie4.start()
+
+    ui.movie5= QtGui.QMovie("assets/speaking.gif")
+    ui.label_speaking.setMovie(ui.movie5)
+    ui.movie5.start()
+
+    ui.movie6= QtGui.QMovie("assets/recognizing.gif")
+    ui.label_recognizing.setMovie(ui.movie6)
+    ui.movie6.start()
+
+    ui.movie7= QtGui.QMovie("assets/asearching.gif")
+    ui.label_searching.setMovie(ui.movie7)
+    ui.movie7.start()
+
     Dialog.show()
-    threading.Thread(target=listen_for_wake_up).start()
     Dialog.finished.connect(on_finished)
 
     wishMe()
+
+    listen_thread = ListenThread()
+    listen_thread.start()
 
     sys.exit(app.exec_())

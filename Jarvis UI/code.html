@@ -1,0 +1,18 @@
+ python
+from googletrans import Translator
+
+# Initialize the translator
+translator = Translator()
+
+# Define the text to be translated
+text = "Hello, world!"
+
+# Define the target languages
+target_languages = ["fr", "ne", "es"]
+
+# Translate the text into the target languages
+translations = translator.translate(text, dest=target_languages)
+
+# Output the translations
+for translation in translations:
+    print(f"{translation.src} -> {translation.dest}: {translation.text}")

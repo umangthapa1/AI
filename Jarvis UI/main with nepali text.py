@@ -16,6 +16,9 @@ import google.ai.generativelanguage as glm
 import pyautogui
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
+from googletrans import Translator
+
+translator = Translator()
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -106,7 +109,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "S.A.H.A.Y.G.U"))
+        Dialog.setWindowTitle(_translate("Dialog", "S.A.H.A.Y.O.G.I"))
         self.label_5.setText(_translate("Dialog", "dsc.gg/coders-hub"))
         self.label_7.setText(_translate("Dialog", "github.com/umangthapa1"))
 
@@ -210,6 +213,10 @@ def load_dataset(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
+def translate_nepali_to_english(text):
+    translated_text = translator.translate(text, src='ne', dest='en').text
+    return translated_text
+
 def speak(audio):
     engine.say(audio)
     engine.runAndWait()
@@ -219,11 +226,13 @@ def wishMe():
     strTime = datetime.datetime.now().strftime("%I:%M %p")
     if hour >= 0 and hour < 12:
         speak("Good Morning!")
+        speak(f"The time is {strTime}")
     elif hour >= 12 and hour < 18:
         speak("Good Afternoon!")
+        speak(f"The time is {strTime}")
     else:
         speak("Good Evening!")
-    speak(f"The time is {strTime}")
+        speak(f"The time is {strTime}")
     speak("I am your personal Sahayogi. How may I assist you?")
 
 def takeCommand():
@@ -234,16 +243,16 @@ def takeCommand():
         speak("Listening...")
         recordedaudio = recognizer.listen(source,0,8)
     try:
-        text = recognizer.recognize_google(recordedaudio, language='en_US')
+        text = recognizer.recognize_google(recordedaudio, language='ne-NP''en-US')
         print("Recognizing...")
-        speak("Recognizing...") 
-        query = r.recognize_google(recordedaudio)
-        print(f"User Said: {query}\n")
-        if 'bye' in query.lower() or 'goodbye' in query.lower() or 'see you later' in query.lower() or 'farewell' in query.lower():
+        speak("Recognizing...")
+        translated_text = translate_nepali_to_english(text)
+        print(f"User Said: {translated_text}\n")
+        if 'bye' in translated_text.lower() or 'goodbye' in translated_text.lower() or 'see you later' in translated_text.lower() or 'farewell' in translated_text.lower():
             speak("Goodbye! See you soon!")
             window.destroy()  
             sys.exit()
-        return query
+        return translated_text
     except Exception as e:
         print("Say that again please...")
         return "None"
@@ -266,16 +275,28 @@ def handle_command(query, outputterminalBox):
                 speak(respo)
                 return
 
-    if any(word in query for word in ['who', 'what', 'where', 'when', 'why', 'how', 'tell me about']):
+    if any(word in query for word in ['who', 'what', 'where', 'when', 'why', 'how', 'tell me about', 'can you give me the code']):
         if 'temperature' in query:
-            pass
+            search = 'temperature in kathmandu'
+            url = f"https://www.google.com/search?q={search}"
+            r = requests.get(url)
+            data = BeautifulSoup(r.text, "html.parser")
+            temperature = data.find("div", class_="BNeawe").text
+            outputterminalBox.appendPlainText(f"The current temperature is {temperature}") 
+            speak(f"The current temperature is {temperature}")
         elif ques.lower() in query:
             pass
         elif 'what is the time' in query:
             strTime = datetime.datetime.now().strftime("%I:%M %p")
             outputterminalBox.appendPlainText(f"The time is {strTime}")
             speak(f"The time is {strTime}")
-
+        elif 'code' in query:
+            with open("code.txt", "w") as file:
+                code_response = chat.send_message(query)
+                cleaned_code_reply = clean_up_code(code_response.text)
+                outputterminalBox.appendPlainText("The code is written in Code.txt") 
+                speak("The code is written in Code.txt")
+                file.write(cleaned_code_reply)
         else:
             speak('Searching...')
             response = chat.send_message(query)
@@ -416,15 +437,6 @@ def handle_command(query, outputterminalBox):
         speak(f'opening website {cleaned_url}')
         webbrowser.open(cleaned_url)
 
-    elif 'temperature' in query:
-        search = 'temperature in kathmandu'
-        url = f"https://www.google.com/search?q={search}"
-        r = requests.get(url)
-        data = BeautifulSoup(r.text, "html.parser")
-        temperature = data.find("div", class_="BNeawe").text
-        outputterminalBox.appendPlainText(f"The current temperature is {temperature}") 
-        speak(f"The current temperature is {temperature}")
-
     elif 'search about a topic'  in query or 'search about the topic' in query:
         outputterminalBox.appendPlainText('what do you want to search about?')
         speak('what do you want to search about?')
@@ -482,6 +494,14 @@ def handle_command(query, outputterminalBox):
         pyautogui.press("volumemute")
         pyautogui.press("volumeunmute")
 
+    elif 'can u message my co owner' in query:
+        speak('Sure! What do u want me to send!')
+        msg = takeCommand()
+        speak('Ok Sure!')
+        open_website('https://discord.com/channels/@me/872034204639186975')
+        pyautogui.write(msg)
+        speak('Done! Sent' + msg)
+
     else:
         outputterminalBox.appendPlainText("I'm sorry, I didn't understand that command. Can you please repeat?")
         speak("I'm sorry, I didn't understand that command. Can you please repeat?")
@@ -495,33 +515,38 @@ def clean_up_text(texts):
     cleaned_text = texts.replace('*', '.').replace('@', 'at').replace(':','.').replace('.','. ')
     return cleaned_text
 
+def clean_up_code(texts):
+    cleaned_text = texts.replace('```', ' ').replace('```html', ' ')
+    return cleaned_text
+
 def clean_up_url(texts):
     cleaned_url = texts.replace('dot', '.').replace('slash', '/')
     return cleaned_url
 
+class ListenThread(QtCore.QThread):
+    def __init__(self):
+        super().__init__()
 
-def listen_for_wake_up():
-    wake_up_phrase = ("hey assistant", "wake up assistant")
-    while True:
-        with sr.Microphone() as source:
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            print("...")
-            audio = recognizer.listen(source)
-        try:
-            text = recognizer.recognize_google(audio, language='en_US').lower()
-            if any(phrase in text for phrase in wake_up_phrase):
-                print("Wake Up Command Detected!")
-                speak("Yes, how can I assist you?")
-                process_command()
-        except sr.UnknownValueError:
-            pass
-        except sr.RequestError as e: 
-            print(f"Could not request results from Google Speech Recognition service; {e}")
-            outputterminalBox.appendPlainText(f"Could not request results from Google Speech Recognition service; {e}")
+    def run(self):
+        wake_up_phrase = ("hey assistant", "wake up assistant")
+        while True:
+            with sr.Microphone() as source:
+                recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                print("...")
+                audio = recognizer.listen(source)
+            try:
+                text = recognizer.recognize_google(audio, language='en_US').lower()
+                if any(phrase in text for phrase in wake_up_phrase):
+                    print("Wake Up Command Detected!")
+                    speak("Yes, how can I assist you?")
+                    process_command()
+            except sr.UnknownValueError:
+                pass
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                outputterminalBox.appendPlainText(f"Could not request results from Google Speech Recognition service; {e}")
 
 def on_finished():
-    global stop_flag
-    stop_flag = True
     sys.exit()
 
 if __name__ == "__main__":
@@ -544,9 +569,11 @@ if __name__ == "__main__":
     ui.movie3.start()
 
     Dialog.show()
-    threading.Thread(target=listen_for_wake_up).start()
-    Dialog.finished.connect(on_finished)
 
     wishMe()
+    Dialog.finished.connect(on_finished)
+
+    listen_thread = ListenThread()
+    listen_thread.start()
 
     sys.exit(app.exec_())
